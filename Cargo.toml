@@ -1,0 +1,42 @@
+[package]
+name = "handypos"
+version = "0.1.0"
+edition = "2024"
+description = "A native workspace for local PostgreSQL containers"
+
+[features]
+default = ["desktop"]
+desktop = ["dep:gpui", "dep:gpui-component"]
+ui-tests = ["desktop", "gpui/test-support"]
+
+[dependencies]
+anyhow = "1"
+directories = "6"
+gpui = { version = "=0.2.2", optional = true }
+gpui-component = { version = "=0.5.1", optional = true }
+percent-encoding = "2"
+rusqlite = { version = "0.37", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+shell-words = "1"
+tempfile = "3"
+uuid = { version = "1", features = ["v4"] }
+wait-timeout = "0.2"
+
+[[bin]]
+name = "handypos"
+path = "src/main.rs"
+required-features = ["desktop"]
+
+[profile.dev]
+debug = 0
+
+[profile.release]
+lto = "thin"
+strip = true
+
+[package.metadata.bundle]
+name = "HandyPOS"
+identifier = "com.matteogassend.handypos"
+category = "Developer Tool"
+short_description = "A native workspace for local PostgreSQL containers"
