@@ -16,4 +16,4 @@ tag_template = "v{version}"
 
 [release_pr.version_updates]
 "Cargo.toml" = ["package.version"]
-"Cargo.lock" = ["package[name=handypos].version"]
+"Cargo.lock" = ["package[name=tusklet].version"]

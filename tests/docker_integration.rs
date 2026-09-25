@@ -1,14 +1,14 @@
 //! Opt-in tests. Only uniquely named test containers/volumes are changed.
-use handypos::{
-    docker::Docker,
-    model::{ContainerState, DatabaseConfig},
-    service::{Action, Service},
-    store::Store,
-};
 use std::{
     process::Command,
     thread,
     time::{Duration, Instant},
+};
+use tusklet::{
+    docker::Docker,
+    model::{ContainerState, DatabaseConfig},
+    service::{Action, Service},
+    store::Store,
 };
 
 #[derive(Default)]
@@ -97,7 +97,7 @@ fn offline_lifecycle_persistence_dump_restore_and_port_reservations() {
         assert_eq!(sql(&name, "SHOW wal_level"), "logical");
         sql(
             &name,
-            "CREATE TABLE handypos_test(value TEXT); INSERT INTO handypos_test VALUES ('persisted');",
+            "CREATE TABLE tusklet_test(value TEXT); INSERT INTO tusklet_test VALUES ('persisted');",
         );
         assert!(!service.docker.logs(&db).unwrap().is_empty());
         let directory = tempfile::tempdir().unwrap();
@@ -112,18 +112,18 @@ fn offline_lifecycle_persistence_dump_restore_and_port_reservations() {
                 .is_err(),
             "Must not overwrite an existing backup"
         );
-        sql(&name, "DROP TABLE handypos_test");
+        sql(&name, "DROP TABLE tusklet_test");
         service
             .execute(Action::Restore(id.clone(), backup))
             .unwrap();
-        assert_eq!(sql(&name, "SELECT value FROM handypos_test"), "persisted");
+        assert_eq!(sql(&name, "SELECT value FROM tusklet_test"), "persisted");
         let plain = directory.path().join("plain.sql");
-        std::fs::write(&plain, "INSERT INTO handypos_test VALUES ('plain SQL');").unwrap();
+        std::fs::write(&plain, "INSERT INTO tusklet_test VALUES ('plain SQL');").unwrap();
         service.execute(Action::Restore(id.clone(), plain)).unwrap();
         let broken = directory.path().join("broken.sql");
         std::fs::write(
             &broken,
-            "INSERT INTO handypos_test VALUES ('rolled back'); SELECT nonexistent_column;",
+            "INSERT INTO tusklet_test VALUES ('rolled back'); SELECT nonexistent_column;",
         )
         .unwrap();
         assert!(
@@ -131,7 +131,7 @@ fn offline_lifecycle_persistence_dump_restore_and_port_reservations() {
                 .execute(Action::Restore(id.clone(), broken))
                 .is_err()
         );
-        assert_eq!(sql(&name, "SELECT count(*) FROM handypos_test"), "2");
+        assert_eq!(sql(&name, "SELECT count(*) FROM tusklet_test"), "2");
         service.execute(Action::Stop(id.clone())).unwrap();
         let mut updated = db.config.clone();
         updated.command = "-c wal_level=logical -c max_replication_slots=12".into();
@@ -141,7 +141,7 @@ fn offline_lifecycle_persistence_dump_restore_and_port_reservations() {
         service.execute(Action::Start(id.clone(), false)).unwrap();
         wait_ready(&service.docker, &name);
         assert_eq!(
-            sql(&name, "SELECT count(*) FROM handypos_test"),
+            sql(&name, "SELECT count(*) FROM tusklet_test"),
             "2",
             "Data must survive container recreation on both PG17 and PG18"
         );
