@@ -5,6 +5,15 @@ on:
 permissions:
   contents: read
 jobs:
+  release-tools:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: brew update
+      - run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
   desktop:
     strategy:
       fail-fast: false

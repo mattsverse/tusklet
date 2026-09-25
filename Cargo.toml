@@ -44,6 +44,7 @@ authors = ["HandyPOS contributors"]
 out-dir = "dist"
 before-packaging-command = "cargo build --locked --release"
 resources = ["README.md"]
+icons = ["assets/handypos.png"]
 
 [package.metadata.packager.macos]
 minimum-system-version = "11.0"

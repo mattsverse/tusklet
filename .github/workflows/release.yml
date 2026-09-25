@@ -12,8 +12,10 @@ jobs:
       matrix:
         include:
           - os: ubuntu-24.04
-            formats: deb
-          - os: macos-latest
+            formats: deb,appimage
+          - os: macos-15
+            formats: app,dmg
+          - os: macos-15-intel
             formats: app,dmg
           - os: windows-latest
             formats: nsis
@@ -26,16 +28,18 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake pkg-config libasound2-dev libfontconfig1-dev libfreetype6-dev libssl-dev libvulkan-dev libwayland-dev libx11-xcb-dev libxcb1-dev libxcb-composite0-dev libxcb-damage0-dev libxcb-randr0-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libxkbcommon-x11-dev libzstd-dev
+          sudo apt-get install -y clang cmake pkg-config libasound2-dev libfontconfig1-dev libfreetype6-dev libssl-dev libvulkan-dev libwayland-dev libx11-xcb-dev libxcb1-dev libxcb-composite0-dev libxcb-damage0-dev libxcb-randr0-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libxkbcommon-x11-dev libzstd-dev libfuse2t64
       - run: cargo test --locked --no-default-features
       - name: Install cargo-packager
         run: cargo install cargo-packager --locked --version 0.11.8
       - name: Build and package
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: '1'
         run: cargo packager --release --formats ${{ matrix.formats }}
       - name: Generate checksums
         shell: pwsh
         run: |
-          $packages = @(Get-ChildItem dist -File | Where-Object { $_.Extension -in '.dmg', '.deb', '.exe' })
+          $packages = @(Get-ChildItem dist -File | Where-Object { $_.Extension -in '.dmg', '.deb', '.AppImage', '.exe' })
           if ($packages.Count -eq 0) { throw 'No release packages were generated.' }
           foreach ($package in $packages) {
             $hash = (Get-FileHash $package.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -47,6 +51,7 @@ jobs:
           path: |
             dist/*.dmg
             dist/*.deb
+            dist/*.AppImage
             dist/*.exe
             dist/*.sha256
           if-no-files-found: error

@@ -16,6 +16,16 @@ A native desktop workspace for local PostgreSQL Docker containers. Built with **
 
 ## Run
 
+After the first stable release is published to the [Homebrew tap](https://github.com/mattsverse/homebrew-tap), install on macOS (Apple Silicon or Intel) or Linux (x86-64) with:
+
+```sh
+brew install --cask mattsverse/tap/handypos
+```
+
+Linux casks require a current Homebrew with AppImage support. The AppImage targets Ubuntu 24.04 or compatible systems (glibc 2.39 or newer), requires FUSE 2 (`libfuse2t64` on Ubuntu 24.04), and can be launched with `handypos`. macOS installs `HandyPOS.app` in Applications; the app is ad-hoc signed and is not notarized, so Gatekeeper may require explicit approval to open it. Both platforms require the Docker CLI and a running local Docker daemon.
+
+To build from source:
+
 Install Rust (edition 2024; the current stable toolchain is recommended) and Docker Desktop, or Docker Engine with the `docker` CLI. Start Docker and use a **local Docker context**. Windows requires Docker's Linux-container mode.
 
 ```sh
@@ -87,11 +97,31 @@ cargo install cargo-packager --locked --version 0.11.8
 # Run the command for the OS you are building on:
 cargo packager --release --formats app,dmg  # macOS
 cargo packager --release --formats nsis     # Windows
-cargo packager --release --formats deb      # Ubuntu 24.04
+cargo packager --release --formats deb,appimage  # Ubuntu 24.04
 ```
 
 [cargo-packager](https://github.com/crabnebula-dev/cargo-packager) reads `[package.metadata.packager]` in `Cargo.toml`, builds the release binary with the lockfile, and writes packages to `dist/`. The app version and description come from the Cargo package metadata. `mise install` also installs the pinned packager version.
 
-macOS produces `HandyPOS.app` and a DMG; Windows produces an NSIS installer; Linux produces a DEB with a desktop entry and runtime dependencies. Install the DEB with `sudo apt install ./dist/*.deb`. Linux packages target Ubuntu 24.04 or compatible systems and require a Vulkan-capable graphics driver and access to a Docker daemon. The macOS bundle is ad-hoc signed; distribution signing/notarization and Windows code signing are not configured.
+macOS produces `HandyPOS.app` and a DMG; Windows produces an NSIS installer; Linux produces a DEB with a desktop entry and runtime dependencies, plus an AppImage. Install the DEB with `sudo apt install ./dist/*.deb`. Linux packages target Ubuntu 24.04 or compatible systems and require a Vulkan-capable graphics driver and access to a Docker daemon. AppImage packaging also needs `libfuse2t64` on Ubuntu 24.04. The macOS bundle is ad-hoc signed; distribution signing/notarization and Windows code signing are not configured.
 
-CI builds and checks all three desktop platforms and runs the Docker tests on Linux. The release workflow packages each platform when a `v*` tag is pushed, generates a SHA-256 file for each installer, then creates a **draft** GitHub release. The macOS release asset is the DMG containing the app. Manual workflow runs produce artifacts without creating a release. No release is published automatically.
+CI builds and checks all three desktop platforms and runs the Docker tests on Linux. The release workflow packages each platform when a `v*` tag is pushed, generates a SHA-256 file for each installer, then creates a **draft** GitHub release. macOS releases include separate Apple Silicon and Intel DMGs containing the app. Manual workflow runs produce artifacts without creating a release. No release is published automatically.
+
+### Homebrew publishing
+
+Publishing a stable GitHub release triggers `.github/workflows/homebrew.yml`. It downloads both macOS DMGs and the Linux x86-64 AppImage, verifies their SHA-256 files, and commits `Casks/handypos.rb` directly to the default branch of `mattsverse/homebrew-tap`. Drafts and prereleases are excluded. Rerunning an unchanged release is a no-op; older versions cannot overwrite a newer cask. The tap must allow direct pushes by the publishing token.
+
+Before the first publication:
+
+1. Make `mattsverse/handypos` public so installer URLs are accessible to Homebrew users.
+2. Create a fine-grained GitHub token limited to `mattsverse/homebrew-tap`, with **Contents: Read and write**. Add it to HandyPOS's Actions secrets as `HOMEBREW_TAP_TOKEN`. The default `GITHUB_TOKEN` cannot write to another repository.
+3. Push these workflows to `main`, create a versioned release through the existing release process, and publish its draft after all installers have uploaded. Publish from the GitHub UI or with a personal/App token: publication using `GITHUB_TOKEN` does not trigger the Homebrew workflow.
+
+To retry publication, run **Publish Homebrew cask** manually with the existing stable tag (for example `v1.2.3`). It fails before updating the tap if the repository is private, the token is missing, or any required installer/checksum is missing or invalid. Users receive subsequent versions with `brew upgrade --cask mattsverse/tap/handypos`.
+
+The cask template is `.github/homebrew/handypos.rb.template`; its generator and release checks can be tested locally with Python 3.11 or newer (the Homebrew DSL check also needs `brew`):
+
+```sh
+python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+```
+
+`assets/handypos.svg` is the source for the square packaging icon required by AppImage. Regenerate the PNG with `magick -background none assets/handypos.svg assets/handypos.png`.
