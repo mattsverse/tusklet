@@ -35,8 +35,45 @@ debug = 0
 lto = "thin"
 strip = true
 
-[package.metadata.bundle]
-name = "HandyPOS"
+[package.metadata.packager]
+product-name = "HandyPOS"
 identifier = "com.matteogassend.handypos"
 category = "Developer Tool"
-short_description = "A native workspace for local PostgreSQL containers"
+publisher = "HandyPOS"
+authors = ["HandyPOS contributors"]
+out-dir = "dist"
+before-packaging-command = "cargo build --locked --release"
+resources = ["README.md"]
+
+[package.metadata.packager.macos]
+minimum-system-version = "11.0"
+signing-identity = "-"
+
+[package.metadata.packager.deb]
+package-name = "handypos"
+section = "devel"
+depends = [
+    "libc6 (>= 2.39)",
+    "libasound2t64",
+    "libfontconfig1",
+    "libfreetype6",
+    "libgcc-s1",
+    "libssl3t64",
+    "libstdc++6",
+    "libvulkan1",
+    "libwayland-client0",
+    "libwayland-cursor0",
+    "libwayland-egl1",
+    "libx11-6",
+    "libx11-xcb1",
+    "libxcb1",
+    "libxcb-composite0",
+    "libxcb-damage0",
+    "libxcb-randr0",
+    "libxcb-render0",
+    "libxcb-shape0",
+    "libxcb-xfixes0",
+    "libxkbcommon0",
+    "libxkbcommon-x11-0",
+    "libzstd1",
+]

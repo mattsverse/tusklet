@@ -53,7 +53,7 @@ impl Docker {
         #[cfg(windows)]
         {
             use std::os::windows::process::CommandExt;
-            command.creation_flags(0x08000000); // CREATE_NO_WINDOW
+            command.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
         }
         command
     }
