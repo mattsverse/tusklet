@@ -1,0 +1,79 @@
+[package]
+name = "handypos"
+version = "0.0.0"
+edition = "2024"
+description = "A native workspace for local PostgreSQL containers"
+
+[features]
+default = ["desktop"]
+desktop = ["dep:gpui", "dep:gpui-component"]
+ui-tests = ["desktop", "gpui/test-support"]
+
+[dependencies]
+anyhow = "1"
+directories = "6"
+gpui = { version = "=0.2.2", optional = true }
+gpui-component = { version = "=0.5.1", optional = true }
+percent-encoding = "2"
+rusqlite = { version = "0.37", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+shell-words = "1"
+tempfile = "3"
+uuid = { version = "1", features = ["v4"] }
+wait-timeout = "0.2"
+
+[[bin]]
+name = "handypos"
+path = "src/main.rs"
+required-features = ["desktop"]
+
+[profile.dev]
+debug = 0
+
+[profile.release]
+lto = "thin"
+strip = true
+
+[package.metadata.packager]
+product-name = "HandyPOS"
+identifier = "com.matteogassend.handypos"
+category = "Developer Tool"
+publisher = "HandyPOS"
+authors = ["HandyPOS contributors"]
+out-dir = "dist"
+before-packaging-command = "cargo build --locked --release"
+resources = ["README.md"]
+
+[package.metadata.packager.macos]
+minimum-system-version = "11.0"
+signing-identity = "-"
+
+[package.metadata.packager.deb]
+package-name = "handypos"
+section = "devel"
+depends = [
+    "libc6 (>= 2.39)",
+    "libasound2t64",
+    "libfontconfig1",
+    "libfreetype6",
+    "libgcc-s1",
+    "libssl3t64",
+    "libstdc++6",
+    "libvulkan1",
+    "libwayland-client0",
+    "libwayland-cursor0",
+    "libwayland-egl1",
+    "libx11-6",
+    "libx11-xcb1",
+    "libxcb1",
+    "libxcb-composite0",
+    "libxcb-damage0",
+    "libxcb-randr0",
+    "libxcb-render0",
+    "libxcb-shape0",
+    "libxcb-xfixes0",
+    "libxkbcommon0",
+    "libxkbcommon-x11-0",
+    "libzstd1",
+]
