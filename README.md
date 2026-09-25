@@ -82,10 +82,16 @@ Source layout: `model.rs` validates configuration; `store.rs` owns SQLite persis
 ## Packaging and releases
 
 ```sh
-cargo build --locked --release
-python3 scripts/package.py
+cargo install cargo-packager --locked --version 0.11.8
+
+# Run the command for the OS you are building on:
+cargo packager --release --formats app,dmg  # macOS
+cargo packager --release --formats nsis     # Windows
+cargo packager --release --formats deb      # Ubuntu 24.04
 ```
 
-Python 3.11+ packages the native binary into `dist/`: a macOS `.app` in a ZIP, a Windows executable in a ZIP, or a Linux tarball with a desktop entry. SHA-256 files accompany each archive. The macOS bundle is ad-hoc signed; distribution signing/notarization and Windows code signing require release credentials and are not configured. Linux packages target Ubuntu 24.04 or compatible systems and require the corresponding runtime libraries and Vulkan driver. Put the Linux binary on PATH before installing its `.desktop` entry.
+[cargo-packager](https://github.com/crabnebula-dev/cargo-packager) reads `[package.metadata.packager]` in `Cargo.toml`, builds the release binary with the lockfile, and writes packages to `dist/`. The app version and description come from the Cargo package metadata. `mise install` also installs the pinned packager version.
 
-CI builds and checks all three desktop platforms and runs the Docker tests on Linux. The release workflow packages each platform when a `v*` tag is pushed, then creates a **draft** GitHub release with the archives. Manual workflow runs produce artifacts without creating a release. No release is published automatically.
+macOS produces `HandyPOS.app` and a DMG; Windows produces an NSIS installer; Linux produces a DEB with a desktop entry and runtime dependencies. Install the DEB with `sudo apt install ./dist/*.deb`. Linux packages target Ubuntu 24.04 or compatible systems and require a Vulkan-capable graphics driver and access to a Docker daemon. The macOS bundle is ad-hoc signed; distribution signing/notarization and Windows code signing are not configured.
+
+CI builds and checks all three desktop platforms and runs the Docker tests on Linux. The release workflow packages each platform when a `v*` tag is pushed, generates a SHA-256 file for each installer, then creates a **draft** GitHub release. The macOS release asset is the DMG containing the app. Manual workflow runs produce artifacts without creating a release. No release is published automatically.
