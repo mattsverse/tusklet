@@ -90,7 +90,7 @@ impl DatabaseConfig {
     }
 
     /// Parse argument quoting without invoking a shell. Network and storage settings
-    /// belong to `HandyPOS` so the container remains reachable and data stays durable.
+    /// belong to `Tusklet` so the container remains reachable and data stays durable.
     ///
     /// # Errors
     /// Rejects malformed quoting, non-setting arguments, and changes to managed
@@ -140,7 +140,7 @@ impl DatabaseConfig {
                     "ident_file"
                 ]
                 .contains(&normalized_key.as_str()),
-                "{key} is managed by HandyPOS."
+                "{key} is managed by Tusklet."
             );
             index += 1;
         }
@@ -161,11 +161,11 @@ pub struct Database {
 impl Database {
     #[must_use]
     pub fn container_name(&self) -> String {
-        format!("handypos-{}", self.id)
+        format!("tusklet-{}", self.id)
     }
     #[must_use]
     pub fn volume_name(&self) -> String {
-        format!("handypos-{}-data", self.id)
+        format!("tusklet-{}-data", self.id)
     }
     #[must_use]
     pub fn image(&self) -> String {

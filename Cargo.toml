@@ -1,5 +1,5 @@
 [package]
-name = "handypos"
+name = "tusklet"
 version = "0.0.0"
 edition = "2024"
 description = "A native workspace for local PostgreSQL containers"
@@ -24,7 +24,7 @@ uuid = { version = "1", features = ["v4"] }
 wait-timeout = "0.2"
 
 [[bin]]
-name = "handypos"
+name = "tusklet"
 path = "src/main.rs"
 required-features = ["desktop"]
 
@@ -36,22 +36,22 @@ lto = "thin"
 strip = true
 
 [package.metadata.packager]
-product-name = "HandyPOS"
-identifier = "com.matteogassend.handypos"
+product-name = "Tusklet"
+identifier = "com.matteogassend.tusklet"
 category = "Developer Tool"
-publisher = "HandyPOS"
-authors = ["HandyPOS contributors"]
+publisher = "Tusklet"
+authors = ["Tusklet contributors"]
 out-dir = "dist"
 before-packaging-command = "cargo build --locked --release"
 resources = ["README.md"]
-icons = ["assets/handypos.png"]
+icons = ["assets/tusklet.png"]
 
 [package.metadata.packager.macos]
 minimum-system-version = "11.0"
 signing-identity = "-"
 
 [package.metadata.packager.deb]
-package-name = "handypos"
+package-name = "tusklet"
 section = "devel"
 depends = [
     "libc6 (>= 2.39)",

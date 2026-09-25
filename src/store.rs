@@ -18,10 +18,10 @@ pub struct Store {
 /// # Errors
 /// Fails if the operating system cannot provide an application data directory.
 pub fn default_path() -> Result<PathBuf> {
-    Ok(ProjectDirs::from("dev", "handypos", "HandyPOS")
+    Ok(ProjectDirs::from("dev", "tusklet", "Tusklet")
         .context("Could not find the application data directory.")?
         .data_local_dir()
-        .join("handypos.sqlite3"))
+        .join("tusklet.sqlite3"))
 }
 
 impl Store {

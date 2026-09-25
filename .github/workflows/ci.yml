@@ -34,7 +34,7 @@ jobs:
       - run: cargo fmt --all --check
       - run: cargo clippy --locked --all-targets --features ui-tests -- -D warnings -D clippy::pedantic -D clippy::perf -D clippy::suspicious
       - run: cargo test --locked --no-default-features
-      - run: cargo test --locked --features ui-tests --bin handypos
+      - run: cargo test --locked --features ui-tests --bin tusklet
       - run: cargo build --locked
   docker:
     runs-on: ubuntu-24.04

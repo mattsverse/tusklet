@@ -7,14 +7,14 @@ use gpui_component::{
     button::{Button, ButtonVariants},
     input::{Input, InputState},
 };
-use handypos::{
-    model::{ContainerState, DatabaseConfig, DatabaseView, Project, Snapshot},
-    service::{Action, Event, Request, spawn_worker},
-};
 use std::{
     path::PathBuf,
     sync::mpsc::{Receiver, Sender},
     time::Duration,
+};
+use tusklet::{
+    model::{ContainerState, DatabaseConfig, DatabaseView, Project, Snapshot},
+    service::{Action, Event, Request, spawn_worker},
 };
 
 const BG: u32 = 0x11_16_18;
@@ -83,7 +83,7 @@ struct Form {
     fields: Vec<Entity<InputState>>,
 }
 
-pub struct HandyPos {
+pub struct Tusklet {
     snapshot: Snapshot,
     selected: Option<String>,
     project: Option<String>,
@@ -99,7 +99,7 @@ pub struct HandyPos {
     log_scroll: ScrollHandle,
 }
 
-impl HandyPos {
+impl Tusklet {
     pub fn new(
         data_path: anyhow::Result<PathBuf>,
         _window: &mut Window,
@@ -214,7 +214,7 @@ impl HandyPos {
             .is_none_or(|worker| worker.send(request).is_err())
         {
             self.notice = Some((
-                "The background service is unavailable. Restart HandyPOS.".into(),
+                "The background service is unavailable. Restart Tusklet.".into(),
                 true,
             ));
             self.busy = None;
@@ -607,7 +607,7 @@ impl HandyPos {
                         div()
                             .text_xl()
                             .font_weight(FontWeight::BOLD)
-                            .child("HandyPOS"),
+                            .child("Tusklet"),
                     )
                     .child(
                         div()
@@ -715,7 +715,7 @@ impl HandyPos {
                     self.snapshot.images.join(", ")
                 }
             )));
-            fields = fields.child(div().text_xs().text_color(rgb(MUTED)).child("Leave the port blank to choose an available one. Assigned ports remain reserved in HandyPOS, even while stopped. Use -c wal_level=logical to enable logical replication."));
+            fields = fields.child(div().text_xs().text_color(rgb(MUTED)).child("Leave the port blank to choose an available one. Assigned ports remain reserved in Tusklet, even while stopped. Use -c wal_level=logical to enable logical replication."));
             if editing {
                 fields = fields.child(div().text_xs().text_color(rgb(MUTED)).child("To change PostgreSQL versions, create a database and migrate with dump/restore."));
             }
@@ -849,7 +849,7 @@ impl HandyPos {
                 .child(Button::new("restore").small().label("Restore backup").disabled(unavailable || view.state != ContainerState::Running).on_click(cx.listener(|this, _, window, cx| this.restore(window, cx))))
                 .child(div().flex_1())
                 .child(Button::new("remove-database").ghost().small().label("Remove database").disabled(unavailable || active).on_click(cx.listener(move |this, _, window, cx| this.open_form(FormKind::Confirm {
-                    action: Action::DeleteDatabase(delete_id.clone()), name: delete_name.clone(), description: format!("Remove the stopped container and its HandyPOS entry. The data volume {volume} will be kept in Docker. Type the database name to confirm.")
+                    action: Action::DeleteDatabase(delete_id.clone()), name: delete_name.clone(), description: format!("Remove the stopped container and its Tusklet entry. The data volume {volume} will be kept in Docker. Type the database name to confirm.")
                 }, window, cx)))))
             .child(div().debug_selector(|| "database-logs".into()).mx_8().mb_6().flex_1().min_h_0().flex().flex_col().border_1().border_color(rgb(LINE)).rounded_lg().overflow_hidden()
                 .child(div().px_4().py_3().bg(rgb(PANEL)).border_b_1().border_color(rgb(LINE)).flex().items_center().justify_between()
@@ -888,7 +888,7 @@ fn metric(label: &'static str, value: String) -> impl IntoElement {
         .child(div().text_sm().child(value))
 }
 
-impl Render for HandyPos {
+impl Render for Tusklet {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let body = if self.form.is_some() {
             self.form_view(cx)
@@ -916,10 +916,10 @@ mod tests {
     use super::*;
     use gpui::{TestAppContext, size};
     use gpui_component::Root;
-    use handypos::model::Database;
+    use tusklet::model::Database;
 
-    fn created_database() -> HandyPos {
-        HandyPos {
+    fn created_database() -> Tusklet {
+        Tusklet {
             snapshot: Snapshot {
                 projects: vec![Project {
                     id: "project".into(),

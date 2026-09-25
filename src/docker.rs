@@ -14,7 +14,7 @@ use wait_timeout::ChildExt;
 
 const TIMEOUT: Duration = Duration::from_secs(20);
 const TRANSFER_TIMEOUT: Duration = Duration::from_mins(30);
-const LABEL: &str = "dev.handypos.managed=true";
+const LABEL: &str = "dev.tusklet.managed=true";
 
 #[derive(Clone)]
 pub struct Docker {
@@ -140,12 +140,12 @@ impl Docker {
         let owner = self.run(&[
             "inspect",
             "--format",
-            "{{ index .Config.Labels \"dev.handypos.database\" }}",
+            "{{ index .Config.Labels \"dev.tusklet.database\" }}",
             &db.container_name(),
         ])?;
         ensure!(
             owner.trim() == db.id,
-            "Refusing to change a container not owned by this HandyPOS database."
+            "Refusing to change a container not owned by this Tusklet database."
         );
         Ok(())
     }
@@ -287,7 +287,7 @@ fn create_args(db: &Database) -> Result<Vec<String>> {
         "--label",
         LABEL,
         "--label",
-        &format!("dev.handypos.database={}", db.id),
+        &format!("dev.tusklet.database={}", db.id),
         "--publish",
         &format!("127.0.0.1:{}:5432", db.port),
         "--mount",
@@ -298,7 +298,7 @@ fn create_args(db: &Database) -> Result<Vec<String>> {
         // Explicit PGDATA avoids the version-dependent defaults (changed in PG18).
         // Keep it outside /var/lib/postgresql/data, which older images declare as VOLUME.
         "--env",
-        "PGDATA=/var/lib/postgresql/handypos",
+        "PGDATA=/var/lib/postgresql/tusklet",
         "--env",
         "POSTGRES_PASSWORD",
         "--env",
@@ -437,7 +437,7 @@ mod tests {
         };
         let args = create_args(&db).unwrap();
         assert!(args.contains(&"127.0.0.1:5437:5432".into()));
-        assert!(args.contains(&"PGDATA=/var/lib/postgresql/handypos".into()));
+        assert!(args.contains(&"PGDATA=/var/lib/postgresql/tusklet".into()));
         assert!(args.contains(&"--pull=never".into()));
         assert!(args.iter().all(|arg| !arg.contains(&db.password)));
         assert!(args.ends_with(&strings(&[

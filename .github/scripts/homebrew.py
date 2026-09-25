@@ -8,9 +8,9 @@ import re
 from string import Template
 
 
-REPOSITORY = "mattsverse/handypos"
+REPOSITORY = "mattsverse/tusklet"
 VERSION_PATTERN = r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
-TEMPLATE = Path(__file__).resolve().parents[1] / "homebrew/handypos.rb.template"
+TEMPLATE = Path(__file__).resolve().parents[1] / "homebrew/tusklet.rb.template"
 
 
 def release_assets(release):
@@ -22,9 +22,9 @@ def release_assets(release):
         raise ValueError("Release tag must be a stable version such as v1.2.3")
     version = tag[1:]
     packages = {
-        "MAC_ARM_SHA256": f"HandyPOS_{version}_aarch64.dmg",
-        "MAC_INTEL_SHA256": f"HandyPOS_{version}_x64.dmg",
-        "LINUX_SHA256": f"handypos_{version}_x86_64.AppImage",
+        "MAC_ARM_SHA256": f"Tusklet_{version}_aarch64.dmg",
+        "MAC_INTEL_SHA256": f"Tusklet_{version}_x64.dmg",
+        "LINUX_SHA256": f"tusklet_{version}_x86_64.AppImage",
     }
     assets = release.get("assets", [])
     for filename in packages.values():
@@ -69,7 +69,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("release", type=Path, help="GitHub release API JSON")
     parser.add_argument("--assets", type=Path, help="Directory of downloaded release assets")
-    parser.add_argument("--output", type=Path, help="Destination Casks/handypos.rb")
+    parser.add_argument("--output", type=Path, help="Destination Casks/tusklet.rb")
     args = parser.parse_args()
     if (args.assets is None) != (args.output is None):
         parser.error("--assets and --output must be supplied together")
@@ -77,7 +77,7 @@ def main():
         release = json.loads(args.release.read_text())
         if args.output is None:
             version, _ = release_assets(release)
-            print(f"Validated HandyPOS {version} release assets")
+            print(f"Validated Tusklet {version} release assets")
         else:
             generate_cask(release, args.assets, args.output)
             print(f"Generated {args.output}")

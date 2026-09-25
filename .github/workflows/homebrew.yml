@@ -40,7 +40,7 @@ jobs:
             exit 1
           fi
           if [ "$(gh api "repos/$SOURCE_REPOSITORY" --jq '.private')" != false ]; then
-            echo 'HandyPOS must be public so Homebrew users can download its release assets.' >&2
+            echo 'Tusklet must be public so Homebrew users can download its release assets.' >&2
             exit 1
           fi
       - name: Validate and download published installers
@@ -62,18 +62,18 @@ jobs:
         run: |
           set -euo pipefail
           python3 .github/scripts/homebrew.py release.json \
-            --assets release-assets --output homebrew-tap/Casks/handypos.rb
-          ruby -c homebrew-tap/Casks/handypos.rb
+            --assets release-assets --output homebrew-tap/Casks/tusklet.rb
+          ruby -c homebrew-tap/Casks/tusklet.rb
       - name: Commit and push cask
         working-directory: homebrew-tap
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add Casks/handypos.rb
+          git add Casks/tusklet.rb
           if git diff --cached --quiet; then
             echo 'The tap already contains this release.'
             exit 0
           fi
-          git commit -m "chore(handypos): release $RELEASE_TAG"
+          git commit -m "chore(tusklet): release $RELEASE_TAG"
           git push

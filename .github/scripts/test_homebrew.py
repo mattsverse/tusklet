@@ -15,12 +15,12 @@ class HomebrewReleaseTests(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
-        self.output = self.root / "Casks/handypos.rb"
+        self.output = self.root / "Casks/tusklet.rb"
         self.release = {"tag_name": "v1.2.3", "draft": False, "prerelease": False, "assets": []}
         self.filenames = [
-            "HandyPOS_1.2.3_aarch64.dmg",
-            "HandyPOS_1.2.3_x64.dmg",
-            "handypos_1.2.3_x86_64.AppImage",
+            "Tusklet_1.2.3_aarch64.dmg",
+            "Tusklet_1.2.3_x64.dmg",
+            "tusklet_1.2.3_x86_64.AppImage",
         ]
         for filename in self.filenames:
             content = filename.encode()
@@ -30,7 +30,7 @@ class HomebrewReleaseTests(unittest.TestCase):
             for name in (filename, filename + ".sha256"):
                 self.release["assets"].append({
                     "name": name,
-                    "browser_download_url": f"https://github.com/mattsverse/handypos/releases/download/v1.2.3/{name}",
+                    "browser_download_url": f"https://github.com/mattsverse/tusklet/releases/download/v1.2.3/{name}",
                 })
 
     def generate(self):
@@ -40,8 +40,8 @@ class HomebrewReleaseTests(unittest.TestCase):
         self.generate()
         cask = self.output.read_text()
         self.assertIn('version "1.2.3"', cask)
-        self.assertIn('app "HandyPOS.app"', cask)
-        self.assertIn('target: "HandyPOS.AppImage"', cask)
+        self.assertIn('app "Tusklet.app"', cask)
+        self.assertIn('target: "Tusklet.AppImage"', cask)
         self.assertIn('depends_on arch: :x86_64', cask)
         for filename in self.filenames:
             self.assertIn(hashlib.sha256(filename.encode()).hexdigest(), cask)
@@ -89,7 +89,7 @@ class HomebrewReleaseTests(unittest.TestCase):
 
     def test_downgrade_does_not_replace_existing_cask(self):
         self.output.parent.mkdir()
-        newer = 'cask "handypos" do\n  version "1.10.0"\nend\n'
+        newer = 'cask "tusklet" do\n  version "1.10.0"\nend\n'
         self.output.write_text(newer)
         with self.assertRaisesRegex(ValueError, "Refusing to downgrade"):
             self.generate()
@@ -97,7 +97,7 @@ class HomebrewReleaseTests(unittest.TestCase):
 
     def test_refuses_to_overwrite_unrecognized_cask(self):
         self.output.parent.mkdir()
-        self.output.write_text('cask "handypos" do\n  version :latest\nend\n')
+        self.output.write_text('cask "tusklet" do\n  version :latest\nend\n')
         with self.assertRaisesRegex(ValueError, "Cannot read the existing cask version"):
             self.generate()
 

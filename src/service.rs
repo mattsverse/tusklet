@@ -212,7 +212,7 @@ pub fn allocate_port(requested: Option<u16>, allocated: &[u16]) -> Result<u16> {
         ensure!(port >= 1024, "Port must be between 1024 and 65535.");
         ensure!(
             !allocated.contains(&port),
-            "Port {port} is reserved by another HandyPOS database."
+            "Port {port} is reserved by another Tusklet database."
         );
         TcpListener::bind((Ipv4Addr::LOCALHOST, port))
             .with_context(|| format!("Port {port} is already in use."))?;
@@ -321,7 +321,7 @@ mod tests {
             .unwrap();
         let service = Service {
             store,
-            docker: Docker::with_executable(PathBuf::from("/__handypos_missing_docker__")),
+            docker: Docker::with_executable(PathBuf::from("/__tusklet_missing_docker__")),
         };
         let snapshot = service.snapshot(None, true).unwrap();
         assert_eq!(snapshot.projects[0].name, "Offline project");
