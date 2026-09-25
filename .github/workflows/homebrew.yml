@@ -1,0 +1,103 @@
+name: Publish Homebrew cask
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Published stable release tag to publish or retry (for example v1.2.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homebrew-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name != 'release' || !github.event.release.prerelease
+    runs-on: ubuntu-24.04
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+      SOURCE_REPOSITORY: ${{ github.repository }}
+      HOMEBREW_DEVELOPER: '1'
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - name: Check publishing configuration
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "$HOMEBREW_TAP_TOKEN" ]; then
+            echo 'Set HOMEBREW_TAP_TOKEN with Contents: Read and write access to mattsverse/homebrew-tap.' >&2
+            exit 1
+          fi
+          if [ "$(gh api "repos/$SOURCE_REPOSITORY" --jq '.private')" != false ]; then
+            echo 'Tusklet must be public so Homebrew users can download its release assets.' >&2
+            exit 1
+          fi
+      - name: Validate published release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo 'Expected a stable release tag such as v1.2.3.' >&2
+            exit 1
+          fi
+          gh release view "$RELEASE_TAG" --repo "$SOURCE_REPOSITORY" \
+            --json isDraft,isPrerelease | jq -e '.isDraft == false and .isPrerelease == false'
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@e99025eb970cfa124b8284a35463d87426917478 # main
+      - name: Update cask with Homebrew
+        run: |
+          set -euo pipefail
+          brew tap mattsverse/tap
+          tap_cask="$(brew --repository mattsverse/tap)/Casks/tusklet.rb"
+          version="${RELEASE_TAG#v}"
+          if [ -f "$tap_cask" ]; then
+            current_version=$(brew info --cask --json=v2 mattsverse/tap/tusklet | jq -r '.casks[0].version')
+            if [ "$version" = "$current_version" ]; then
+              echo 'The tap already contains this release.'
+              exit 0
+            fi
+            ruby -e 'abort "Refusing to downgrade the cask" unless Gem::Version.new(ARGV[0]) > Gem::Version.new(ARGV[1])' \
+              "$version" "$current_version"
+          else
+            mkdir -p "$(dirname "$tap_cask")"
+            cp .github/homebrew/tusklet.rb "$tap_cask"
+          fi
+          # This tap intentionally ships an ad-hoc signed macOS app.
+          brew bump-cask-pr --write-only --no-audit --no-style \
+            --version="$version" mattsverse/tap/tusklet
+          # Never publish bootstrap checksums if a Homebrew version skips a platform.
+          if grep -Eq '"(0{64}|1{64}|2{64})"' "$tap_cask"; then
+            echo 'Homebrew did not update every platform checksum.' >&2
+            exit 1
+          fi
+          ruby -c "$tap_cask"
+      - name: Commit and push cask
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh auth setup-git
+          cd "$(brew --repository mattsverse/tap)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Casks/tusklet.rb
+          if git diff --cached --quiet; then
+            echo 'The tap already contains this release.'
+            exit 0
+          fi
+          git commit -m "chore(tusklet): release $RELEASE_TAG"
+          git push
