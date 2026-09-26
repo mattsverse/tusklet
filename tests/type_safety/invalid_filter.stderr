@@ -1,0 +1,32 @@
+error[E0277]: the trait bound `std::string::String: From<{integer}>` is not satisfied
+ --> tests/type_safety/invalid_filter.rs:9:68
+  |
+9 |     let _ = project::Entity::find().filter(project::COLUMN.name.eq(123));
+  |                                                                 -- ^^^ the trait `From<{integer}>` is not implemented for `std::string::String`
+  |                                                                 |
+  |                                                                 required by a bound introduced by this call
+  |
+  = help: `std::string::String` implements trait `From<T>`:
+            From<&mut str>
+            From<&std::string::String>
+            From<&str>
+            From<Box<str>>
+            From<Cow<'_, str>>
+            From<PgLTree>
+            From<aliasable::string::AliasableString>
+            From<char>
+            From<sea_orm::prelude::Uuid>
+            From<url::Url>
+  = note: required for `{integer}` to implement `Into<std::string::String>`
+note: required by a bound in `StringColumn::<E>::eq`
+ --> $CARGO/sea-orm-$VERSION/src/entity/column/types.rs
+  |
+  |                 V: Into<Value> + $value_ty,
+  |                                  ^^^^^^^^^ required by this bound in `StringColumn::<E>::eq`
+...
+  |         bind_oper!(pub eq, eq, trait $trait);
+  |                        -- required by a bound in this associated function
+...
+  | impl_string_column!(StringColumn, Into<String>);
+  | ----------------------------------------------- in this macro invocation
+  = note: this error originates in the macro `bind_oper` which comes from the expansion of the macro `impl_string_column` (in Nightly builds, run with -Z macro-backtrace for more info)
