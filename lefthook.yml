@@ -1,0 +1,6 @@
+pre-commit:
+  jobs:
+    - name: "clippy"
+      run: cargo clippy -- -D warnings -D clippy::pedantic -D clippy::perf -D clippy::suspicious
+      glob:
+        - "*.rs"
