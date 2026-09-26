@@ -1,0 +1,4 @@
+[tools]
+"cargo:cargo-packager" = "0.11.8"
+lefthook = "latest"
+rust = "latest"

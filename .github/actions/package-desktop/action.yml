@@ -1,0 +1,76 @@
+name: Package desktop application
+description: Build Tusklet installers, generate SHA-256 checksums, and upload them as an artifact.
+
+inputs:
+  formats:
+    description: Comma-separated cargo-packager formats supported by the current runner.
+    required: true
+  artifact-name:
+    description: Name of the uploaded installer artifact.
+    required: true
+  retention-days:
+    description: Artifact retention in days; 0 uses the repository default.
+    default: '0'
+  packager-version:
+    description: cargo-packager version to install.
+    default: '0.11.8'
+
+outputs:
+  artifact-id:
+    description: ID of the uploaded installer artifact.
+    value: ${{ steps.upload.outputs.artifact-id }}
+  artifact-url:
+    description: Download URL for the uploaded installer artifact.
+    value: ${{ steps.upload.outputs.artifact-url }}
+  artifact-digest:
+    description: SHA-256 digest of the uploaded artifact archive.
+    value: ${{ steps.upload.outputs.artifact-digest }}
+
+runs:
+  using: composite
+  steps:
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: Swatinem/rust-cache@v2.9.2
+    - name: Install Linux desktop libraries
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang cmake pkg-config libasound2-dev libfontconfig1-dev libfreetype6-dev libssl-dev libvulkan-dev libwayland-dev libx11-xcb-dev libxcb1-dev libxcb-composite0-dev libxcb-damage0-dev libxcb-randr0-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libxkbcommon-x11-dev libzstd-dev libfuse2t64
+    - name: Test backend
+      shell: bash
+      run: cargo test --locked --no-default-features
+    - name: Install cargo-packager
+      shell: bash
+      env:
+        PACKAGER_VERSION: ${{ inputs.packager-version }}
+      run: cargo install cargo-packager --locked --version "$PACKAGER_VERSION"
+    - name: Build and package
+      shell: bash
+      env:
+        APPIMAGE_EXTRACT_AND_RUN: '1'
+        PACKAGE_FORMATS: ${{ inputs.formats }}
+      run: cargo packager --release --formats "$PACKAGE_FORMATS"
+    - name: Generate checksums
+      shell: pwsh
+      run: |
+        $packages = @(Get-ChildItem dist -File | Where-Object { $_.Extension -in '.dmg', '.deb', '.AppImage', '.exe' })
+        if ($packages.Count -eq 0) { throw 'No application packages were generated.' }
+        foreach ($package in $packages) {
+          $hash = (Get-FileHash $package.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $($package.Name)" | Set-Content -Path "$($package.FullName).sha256" -Encoding ascii
+        }
+    - name: Upload installers
+      id: upload
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: |
+          dist/*.dmg
+          dist/*.deb
+          dist/*.AppImage
+          dist/*.exe
+          dist/*.sha256
+        if-no-files-found: error
+        retention-days: ${{ inputs.retention-days }}
+        overwrite: true
