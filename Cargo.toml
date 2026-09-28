@@ -53,7 +53,7 @@ authors = ["Tusklet contributors"]
 out-dir = "dist"
 before-packaging-command = "cargo build --locked --release"
 resources = ["README.md"]
-icons = ["assets/tusklet.png"]
+icons = ["assets/tusklet.icns", "assets/tusklet.png"]
 
 [package.metadata.packager.macos]
 minimum-system-version = "11.0"

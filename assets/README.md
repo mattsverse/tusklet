@@ -12,6 +12,14 @@ magick assets/source/tusklet.png -resize 1024x1024 -strip assets/tusklet.png
 magick assets/source/tray.png -trim +repage -resize 40x32 -gravity center -background none -extent 44x36 -strip assets/tray.png
 ```
 
+After updating `tusklet.png`, regenerate the committed macOS icon on macOS:
+
+```sh
+bash assets/generate-macos-icon.sh
+```
+
+`tusklet.icns` contains standard and Retina icon sizes, including the 1024-pixel artwork. It is listed before the PNG in the packager configuration so macOS uses the native icon directly: cargo-packager 0.11.8 fails with `No matching IconType` when converting the 1024-pixel PNG. Linux and Windows continue to use the PNG.
+
 The packaged icon remains square. The tray asset is 44 × 36 pixels, displayed by `tray-icon` at 22 × 18 logical points on macOS, with room around the artwork for antialiasing. Keep `.with_icon_as_template(true)` in `src/tray.rs` so the system chooses its light or dark appearance.
 
 ## Image preparation prompts

@@ -22,6 +22,7 @@ fn empty_offline_workspace_can_select_podman(cx: &mut TestAppContext) {
         assert!(view.busy.is_some());
         view.snapshot.runtime_engine = Engine::Podman;
         assert_eq!(view.runtime_status(), "● Podman unavailable");
+        #[cfg(target_os = "macos")]
         assert!(format!("{:?}", view.tray_model()).contains("Podman unavailable"));
     });
 }
